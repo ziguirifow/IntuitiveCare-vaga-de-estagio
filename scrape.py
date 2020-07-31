@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+import os
 
 url = 'http://www.ans.gov.br/prestadores/tiss-troca-de-informacao-de-saude-suplementar/'
 
@@ -16,13 +17,15 @@ response_especifica = requests.get(url_especifica)
 page_especifica = response_especifica.content
 soup = BeautifulSoup(page_especifica, 'html.parser')
 
-print("Procurando arquivo em PDF do Padrão para Troca de Informação de Saúde Suplementar - (TISS)\n")
+print("Procurando arquivo mais recente do Padrão para Troca de Informação de Saúde Suplementar - (TISS) em PDF \n")
 aPdfHref = soup.find('a', target='_self').attrs['href']
 r = requests.get('http://www.ans.gov.br' + aPdfHref)
 file = aPdfHref[aPdfHref.rfind('/') + 1:]
 
 if file.endswith('.pdf'):
-    print("Arquivo encontrado:", file, "e feito download.")
-    open(file, 'wb').write(r.content)
+    with open(fr'\Users\{os.getlogin()}\Desktop\{file}', 'wb') as file:
+        file.write(r.content)
+        file.close()
+    print("Arquivo encontrado e salvo no caminho:", file.name)
 else:
     print("Não encontramos o arquivo solicitado")
