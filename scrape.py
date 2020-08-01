@@ -26,9 +26,7 @@ r = requests.get('http://www.ans.gov.br' + aPdfHref)
 file = aPdfHref[aPdfHref.rfind('/') + 1:]
 
 if file.endswith('.pdf'):
-    with open(fr'\Users\{os.getlogin()}\Desktop\{file}', 'wb') as file:
-        file.write(r.content)
-        file.close()
-    print("Arquivo encontrado e salvo em:", file.name, "\n")
+    open(file, 'wb').write(r.content)
+    print("Arquivo encontrado e salvo em:", os.path.realpath(file), "\n")
 else:
     print("Não encontramos o arquivo solicitado")
