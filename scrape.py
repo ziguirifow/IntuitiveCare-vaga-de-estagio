@@ -1,32 +1,47 @@
 import os
+import re
+import time
 
 import requests
 from bs4 import BeautifulSoup
 
-url = 'http://www.ans.gov.br/prestadores/tiss-troca-de-informacao-de-saude-suplementar/'
 
-print("\nAcessando site da Agência Nacional de Saúde Suplementar:")
-print(url)
-response = requests.get(url)
-page = response.content
-soup = BeautifulSoup(page, 'html.parser')
+def main():
+    start_time = time.time()
 
-ANS = soup.find('a', target='_self').attrs['href']
-url_especifica = 'http://www.ans.gov.br' + ANS
-print("\nAcessando link da versão atualizado:")
-print(url_especifica)
+    url = 'http://www.ans.gov.br/prestadores/tiss-troca-de-informacao-de-saude-suplementar/'
+    home_url = 'http://www.ans.gov.br'
 
-response_especifica = requests.get(url_especifica)
-page_especifica = response_especifica.content
-soup = BeautifulSoup(page_especifica, 'html.parser')
+    def acessa_site_ans():
+        print("\nAcessando site da Agência Nacional de Saúde Suplementar:")
+        print(url)
+        response = requests.get(url)
+        page = response.content
+        return BeautifulSoup(page, 'html.parser')
 
-print("Procurando arquivo mais recente do Padrão para Troca de Informação de Saúde Suplementar - (TISS) em PDF \n")
-aPdfHref = soup.find('a', target='_self').attrs['href']
-r = requests.get('http://www.ans.gov.br' + aPdfHref)
-file = aPdfHref[aPdfHref.rfind('/') + 1:]
+    def acessa_link_com_versao_atualizada():
+        link = acessa_site_ans().find('a', href=re.compile('padrao')).attrs['href']
+        print("\nAcessando link da versão atualizado:", home_url + link)
+        return home_url + link
 
-if file.endswith('.pdf'):
-    open(file, 'wb').write(r.content)
-    print("Arquivo encontrado e salvo em:", os.path.realpath(file), "\n")
-else:
-    print("Não encontramos o arquivo solicitado")
+    def pagina_especifica_versao_atualizada():
+        response_especifica = requests.get(acessa_link_com_versao_atualizada())
+        page_especifica = response_especifica.content
+        return BeautifulSoup(page_especifica, 'html.parser')
+
+    pdf_link = pagina_especifica_versao_atualizada().find('a', href=re.compile('Padrao')).attrs['href']
+    r = requests.get(home_url + pdf_link)
+
+    file = pdf_link[pdf_link.rfind('/') + 1:]
+
+    if file.endswith('.pdf'):
+        open(file, 'wb').write(r.content)
+        print("TISS mais recente salvo em:", os.path.realpath(file), "\n")
+    else:
+        print("Não encontramos o arquivo solicitado")
+
+    print("My program took", time.time() - start_time, "to run")
+
+
+if __name__ == "__main__":
+    main()
